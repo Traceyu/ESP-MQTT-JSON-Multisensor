@@ -486,7 +486,8 @@ void loop() {
     }
 
 
-    int newLDR = lightMeter.readLightLevel();
+    //int newLDR = lightMeter.readLightLevel();
+    uint16_t newLDR = lightMeter.readLightLevel();
 
     if (checkBoundSensor(newLDR, LDR, diffLDR)) {
       LDR = newLDR;
