@@ -35,15 +35,18 @@
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 #include <ArduinoJson.h>
+#include <Wire.h>
+#include <BH1750.h>
+
 
 
 
 /************ WIFI and MQTT INFORMATION (CHANGE THESE FOR YOUR SETUP) ******************/
-#define wifi_ssid "YourSSID" //type your WIFI information inside the quotes
-#define wifi_password "YourWIFIpassword"
-#define mqtt_server "your.mqtt.server.ip"
-#define mqtt_user "yourMQTTusername" 
-#define mqtt_password "yourMQTTpassword"
+#define wifi_ssid "***" //type your WIFI information inside the quotes
+#define wifi_password "***"
+#define mqtt_server "***"
+#define mqtt_user "***" 
+#define mqtt_password "***"
 #define mqtt_port 1883
 
 
@@ -59,7 +62,7 @@ const char* off_cmd = "OFF";
 
 /**************************** FOR OTA **************************************************/
 #define SENSORNAME "sensornode1"
-#define OTApassword "YouPassword" // change this to whatever password you want to use when you upload OTA
+#define OTApassword "***" // change this to whatever password you want to use when you upload OTA
 int OTAport = 8266;
 
 
@@ -68,10 +71,12 @@ int OTAport = 8266;
 const int redPin = D1;
 const int greenPin = D2;
 const int bluePin = D3;
-#define PIRPIN    D5
-#define DHTPIN    D7
+#define PIRPIN    D4
+#define DHTPIN    D5
 #define DHTTYPE   DHT22
-#define LDRPIN    A0
+//#define LDRPIN    A0
+#define SDAPIN    D6
+#define SCLPIN    D7
 
 
 
@@ -135,7 +140,7 @@ WiFiClient espClient;
 PubSubClient client(espClient);
 DHT dht(DHTPIN, DHTTYPE);
 
-
+BH1750 lightMeter;
 
 /********************************** START SETUP*****************************************/
 void setup() {
@@ -144,7 +149,7 @@ void setup() {
 
   pinMode(PIRPIN, INPUT);
   pinMode(DHTPIN, INPUT);
-  pinMode(LDRPIN, INPUT);
+  //pinMode(LDRPIN, INPUT);
 
   Serial.begin(115200);
   delay(10);
@@ -192,6 +197,10 @@ void setup() {
   Serial.print("IPess: ");
   Serial.println(WiFi.localIP());
   reconnect();
+
+  Wire.begin(SDAPIN,SCLPIN);
+
+  lightMeter.begin();
 }
 
 
@@ -446,7 +455,7 @@ void loop() {
 
   if (!inFade) {
 
-    float newTempValue = dht.readTemperature(true); //to use celsius remove the true text inside the parentheses  
+    float newTempValue = dht.readTemperature(); //to use celsius remove the true text inside the parentheses  
     float newHumValue = dht.readHumidity();
 
     //PIR CODE
@@ -477,7 +486,7 @@ void loop() {
     }
 
 
-    int newLDR = analogRead(LDRPIN);
+    int newLDR = lightMeter.readLightLevel();
 
     if (checkBoundSensor(newLDR, LDR, diffLDR)) {
       LDR = newLDR;
